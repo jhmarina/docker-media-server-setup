@@ -146,7 +146,7 @@ services:
       - WEBUI_PORT=8085
     volumes:
       - ./qbittorrent:/config
-      - - $MEDIADIR/torrents:/downloads
+      - $MEDIADIR/torrents:/downloads
     depends_on:
       - gluetun
     restart: always
