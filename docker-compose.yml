@@ -156,7 +156,7 @@ services:
       - WEBUI_PORT=8080
     volumes:
       - ./qbit:/config
-      - $MEDIADIR:/downloads
+      - $MEDIADIR/downloads:/downloads
 #    ports:
 #      - 8080:8080
 #      - 6881:6881
