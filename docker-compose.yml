@@ -109,7 +109,7 @@ services:
         - NET_ADMIN
     volumes:
         - ./transmission-openvpn:/config
-        - $MEDIADIR/torrents:/data/torrents
+        - $MEDIADIR/downloads/transmission:/data
     environment:
       - PUID=$PUID
       - PGID=$PGID
