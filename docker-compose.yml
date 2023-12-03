@@ -111,8 +111,8 @@ services:
         - ./transmission-openvpn:/config
         - $MEDIADIR/torrents:/data
     environment:
-      - PUID=$PUID
-      - PGID=$PGID
+      - PUID=1000
+      - PGID=1000
       - TZ=$TZ
       - OPENVPN_PROVIDER=PIA
       - OPENVPN_CONFIG=spain,france,sweden,austria,italy,belgium,portugal
