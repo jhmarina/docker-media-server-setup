@@ -157,9 +157,9 @@ services:
     volumes:
       - ./qbit:/config
       - $MEDIADIR:/downloads
-   ports:
-     - 8080:8080
-     - 6881:6881
-     - 6881:6881/udp
+    ports:
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
     network_mode: service:gluetun
     restart: unless-stopped
