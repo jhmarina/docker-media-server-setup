@@ -102,30 +102,64 @@ services:
     restart: unless-stopped
 
 
-  transmission-openvpn: #torrent download agent with vpn
-    image: haugene/transmission-openvpn
-    container_name: transmission-openvpn
+  # transmission-openvpn: #torrent download agent with vpn
+  #   image: haugene/transmission-openvpn
+  #   container_name: transmission-openvpn
+  #   cap_add:
+  #       - NET_ADMIN
+  #   volumes:
+  #       - ./transmission-openvpn:/config
+  #       - $MEDIADIR/torrents:/data
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=$TZ
+  #     - OPENVPN_PROVIDER=PIA
+  #     - OPENVPN_CONFIG=spain,france,sweden,austria,italy,belgium,portugal
+  #     - OPENVPN_USERNAME=$VPN_USR
+  #     - OPENVPN_PASSWORD=$VPN_PWD
+  #     - LOCAL_NETWORK=192.168.1.0/24
+  #     - TRANSMISSION_WEB_UI=flood-for-transmission
+  #     - GLOBAL_APPLY_PERMISSIONS=false
+  #     - UMASK=022
+  #   logging:
+  #       driver: json-file
+  #       options:
+  #           max-size: 10m
+  #   ports:
+  #       - 9091:9091
+  #   restart: unless-stopped
+
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun-vpn
     cap_add:
-        - NET_ADMIN
-    volumes:
-        - ./transmission-openvpn:/config
-        - $MEDIADIR/torrents:/data
+      - NET_ADMIN
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=$TZ
-      - OPENVPN_PROVIDER=PIA
-      - OPENVPN_CONFIG=spain,france,sweden,austria,italy,belgium,portugal
-      - OPENVPN_USERNAME=$VPN_USR
-      - OPENVPN_PASSWORD=$VPN_PWD
-      - LOCAL_NETWORK=192.168.1.0/24
-      - TRANSMISSION_WEB_UI=flood-for-transmission
-      - GLOBAL_APPLY_PERMISSIONS=false
-      - UMASK=022
-    logging:
-        driver: json-file
-        options:
-            max-size: 10m
+      - VPN_SERVICE_PROVIDER=$VPNPROVIDER
+      - OPENVPN_USER=$GTUSER
+      - OPENVPN_PASSWORD=$GTPW
+      - SERVER_REGIONS=$GTREGION
     ports:
-        - 9091:9091
+    #the container port(s) should be the ones needed for the container you want to use the gluetun network
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - WEBUI_PORT=8080
+    volumes:
+      - ./qbit:/config
+      - $MEDIADIR:/downloads
+   ports:
+     - 8080:8080
+     - 6881:6881
+     - 6881:6881/udp
+    network_mode: service:gluetun
     restart: unless-stopped
