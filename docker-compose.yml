@@ -20,33 +20,6 @@ services:
 #    ports:
 #      - 6767:6767
 #    restart: unless-stopped
-  gluetun:
-    image: qmcgaw/gluetun
-    container_name: gluetun
-    # line above must be uncommented to allow external containers to connect.
-    # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/connect-a-container-to-gluetun.md#external-container-to-gluetun
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    ports:
-      - 6881:6881
-      - 6881:6881/udp
-      - 8085:8085 # qbittorrent
-    volumes:
-      - ./gluetun:/gluetun
-    environment:
-      # See https://github.com/qdm12/gluetun-wiki/tree/main/setup#setup
-      - VPN_SERVICE_PROVIDER=private internet access
-      - OPENVPN_USER=$VPN_USR
-      - OPENVPN_PASSWORD=$VPN_PWD
-      - SERVER_REGIONS=spain,france,sweden,austria,italy,belgium,portugal
-      # Timezone for accurate log times
-      - TZ=Europe/Madrid
-      # Server list updater
-      # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/servers.md#update-the-vpn-servers-list
-      - UPDATER_PERIOD=24h
-      restart: unless-stopped
 
   jackett: #torrent download agent
     image: lscr.io/linuxserver/jackett:latest
@@ -124,23 +97,35 @@ services:
     volumes:
       - ./sonarrV3:/config
       - $MEDIADIR:/data
-      - $MEDIADIR/torrents:/downloads #optional
     ports:
       - 8989:8989
     restart: unless-stopped
-  
-  qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent
-    container_name: qbittorrent
-    network_mode: "service:gluetun"
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Madrid
-      - WEBUI_PORT=8085
+
+
+  transmission-openvpn: #torrent download agent with vpn
+    image: haugene/transmission-openvpn
+    container_name: transmission-openvpn
+    cap_add:
+        - NET_ADMIN
     volumes:
-      - ./qbittorrent:/config
-      - $MEDIADIR/torrents:/downloads
-    depends_on:
-      - gluetun
-    restart: always
+        - ./transmission-openvpn:/config
+        - $MEDIADIR/torrents:/data/torrents
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - OPENVPN_PROVIDER=PIA
+      - OPENVPN_CONFIG=spain,france,sweden,austria,italy,belgium,portugal
+      - OPENVPN_USERNAME=$VPN_USR
+      - OPENVPN_PASSWORD=$VPN_PWD
+      - LOCAL_NETWORK=192.168.1.0/24
+      - TRANSMISSION_WEB_UI=flood-for-transmission
+      - GLOBAL_APPLY_PERMISSIONS=false
+      - UMASK=022
+    logging:
+        driver: json-file
+        options:
+            max-size: 10m
+    ports:
+        - 9091:9091
+    restart: unless-stopped
